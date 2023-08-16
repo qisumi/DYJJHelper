@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DYJJHelper
 // @namespace    https://github.com/qisumi
-// @version      0.1
+// @version      0.2.0
 // @description  Dao Yuan Jie Jie !
 // @author       Qisumi
 // @match        https://ywgl.seu.edu.cn/*
@@ -16,18 +16,163 @@
 // @grant        GM_unregisterMenuCommand
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_addStyle
 // @require      https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js
 // @run-at document-idle
 // ==/UserScript==
 
 (function () {
     'use strict';
+    /* --------------------------------- 用户面板部分 --------------------------------- */
 
-    /**
-     * 这里编写审核通过的条件逻辑判断，需要注意的是在JS中，日期的月份是从0开始的
-     *
-     */
+    /* -------------------------------------------------------------------------- */
+    /*                         辅助实现用户面板的CSS                                */
+    /* -------------------------------------------------------------------------- */
+    let usercss = `
+.accordion {
+  background-color: #eee;
+  color: #444;
+  cursor: pointer;
+  padding: 8px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  outline: none;
+  transition: 0.4s;
+}
+ 
+.active, .accordion:hover {
+  background-color: #ccc;
+}
+ 
+.panel {
+  padding: 0 8px;
+  background-color: white;
+  display: none;
+  overflow: hidden;
+}
+ 
+#floating-panel {
+  position: absolute;
+  z-index: 9;
+  background-color: #f1f1f1;
+  border: 1px solid #d3d3d3;
+  text-align: center;
+  width: 200px;
+}
+ 
+#floating-panel-header {
+  padding: 10px;
+  cursor: move;
+  z-index: 10;
+  background-color: #2196F3;
+  color: #fff;
+}`
+    /* -------------------------------------------------------------------------- */
+    /*                              用户面板内容                                   */
+    /* -------------------------------------------------------------------------- */
+    let floatingPanelHTML = `
+    <div id="floating-panel">
+        <div id="floating-panel-header">辅导员小助手</div>
+        <div class="floating-panel-submodule">
+            <button class="accordion">自动审批入校流程功能</button>
+            <div class="panel">
+              <p>暂时没有什么可以给你选择的内容</p>
+            </div>
+        </div>
+        <div class="floating-panel-submodule">
+            <button class="accordion">功能等待开发</button>
+            <div class="panel">
+              <p>功能等待开发</p>
+            </div>
+        </div>
+    </div>`
+
+    /* -------------------------------------------------------------------------- */
+    /*                              用户面板脚本                                   */
+    /* -------------------------------------------------------------------------- */
+    // 插入元素和样式表
+    GM_addStyle(usercss);
+    $("body").prepend(floatingPanelHTML)
+    // 使 DIV 元素可拖动:
+    dragElement(document.getElementById("floating-panel"));
+    function dragElement(elmnt) {
+        var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        if (document.getElementById(elmnt.id + "-header")) {
+            // 如果存在，标题是您从中移动 DIV 的位置:
+            document.getElementById(elmnt.id + "-header").onmousedown = dragMouseDown;
+        } else {
+            // 否则，从 DIV 内的任何位置移动 DIV:
+            elmnt.onmousedown = dragMouseDown;
+        }
+        function dragMouseDown(e) {
+            e = e || window.event;
+            e.preventDefault();
+            // 在启动时获取鼠标光标位置:
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            document.onmouseup = closeDragElement;
+            // 每当光标移动时调用一个函数:
+            document.onmousemove = elementDrag;
+        }
+        function elementDrag(e) {
+            e = e || window.event;
+            e.preventDefault();
+            // 计算新的光标位置:
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            // 设置元素的新位置:
+            elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+            elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+        }
+
+        function closeDragElement() {
+            // 释放鼠标按钮时停止移动:
+            document.onmouseup = null;
+            document.onmousemove = null;
+        }
+    }
+
+    // 使面板的不同功能可以折叠
+    let acc = document.getElementsByClassName("accordion");
+    let panel_selector;
+
+    for (panel_selector = 0; panel_selector < acc.length; panel_selector++) {
+        acc[panel_selector].addEventListener("click", function () {
+            /* 在添加和删除 "active" 类之间切换，
+            突出显示控制面板的按钮 */
+            this.classList.toggle("active");
+
+            /* 在隐藏和显示活动面板之间切换 */
+            var panel = this.nextElementSibling;
+            if (panel.style.display === "block") {
+                panel.style.display = "none";
+            } else {
+                panel.style.display = "block";
+            }
+        });
+    }
+
+    // 面板折叠功能
+    let submodule_hide = false
+    $("#floating-panel-header").dblclick(function () {
+        if (submodule_hide)
+            $(".floating-panel-submodule").show()
+        else
+            $(".floating-panel-submodule").hide()
+        submodule_hide = !submodule_hide
+    })
+
+
+
+    /* -------------------------------------------------------------------------- */
+
+
+    /* -------------------------------- 脚本功能实现部分 -------------------------------- */
     let filter = function (item, idx, array) {
+        // 这里编写审核通过的条件逻辑判断，需要注意的是在JS中，日期的月份是从0开始的
         let arriveGateTime = new Date(item.arrive_gate_time)
         let beginTime = new Date(2023, 7, 19)
         let endTime = new Date(2023, 7, 21)
@@ -36,7 +181,6 @@
         }
         return true
     }
-
     let getUrls = function () {
         GM_xmlhttpRequest({
             url: "https://ywgl.seu.edu.cn/api/stureturn/bkslook/0",
@@ -118,6 +262,5 @@
             }
         });
     }
-
     getUrls();
 })();
