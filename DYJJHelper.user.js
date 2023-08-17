@@ -46,7 +46,7 @@
 }
  
 .panel {
-  padding: 0 8px;
+  padding: 5px;
   background-color: white;
   display: none;
   overflow: hidden;
@@ -67,7 +67,13 @@
   z-index: 10;
   background-color: #2196F3;
   color: #fff;
-}`
+}
+.func {
+  padding: 3px;
+  cursor: pointer;
+  border: 1px solid #d3d3d3;
+}
+`
     /* -------------------------------------------------------------------------- */
     /*                              用户面板内容                                   */
     /* -------------------------------------------------------------------------- */
@@ -77,7 +83,9 @@
         <div class="floating-panel-submodule">
             <button class="accordion">自动审批入校流程功能</button>
             <div class="panel">
-              <p>暂时没有什么可以给你选择的内容</p>
+              <div id="panel-1-func-0" class = "func">统计待审批个数</div>
+              <div id="panel-1-func-1" class = "func">一键开始自动审批(有筛选)</div>
+              <div id="panel-1-func-2" class = "func">一键开始自动审批(无条件)</div>
             </div>
         </div>
         <div class="floating-panel-submodule">
@@ -166,11 +174,28 @@
     })
 
 
+    /* -------------------------------------------------------------------------- */
+    /*                             面板功能按钮绑定                                  */
+    /* -------------------------------------------------------------------------- */
+
+    let panel_1_func_1 = $("#panel-1-func-1")
+    panel_1_func_1.on("click", function () {
+        GM_setValue('DYJJHelper_autoSubmit', true)
+        setTimeout(getUrls, 1000, filter)
+    })
+    let panel_1_func_2 = $("#panel-1-func-2")
+    panel_1_func_2.on("click", function () {
+        GM_setValue('DYJJHelper_autoSubmit', true)
+        setTimeout(getUrls, 1000, () => true)
+    })
 
     /* -------------------------------------------------------------------------- */
 
 
     /* -------------------------------- 脚本功能实现部分 -------------------------------- */
+    /* -------------------------------------------------------------------------- */
+    /*                        1. 入校申请自动审批功能                               */
+    /* -------------------------------------------------------------------------- */
     let filter = function (item, idx, array) {
         // 这里编写审核通过的条件逻辑判断，需要注意的是在JS中，日期的月份是从0开始的
         let arriveGateTime = new Date(item.arrive_gate_time)
@@ -181,7 +206,7 @@
         }
         return true
     }
-    let getUrls = function () {
+    let getUrls = function (filter) {
         GM_xmlhttpRequest({
             url: "https://ywgl.seu.edu.cn/api/stureturn/bkslook/0",
             method: "POST",
@@ -226,7 +251,18 @@
                     }
                     let submit_btn = document.querySelectorAll("a.command_button_content")[0]
                     if (submit_btn) {
-                        if (submit_btn.innerHTML !== '<nobr>审批通过</nobr>') return
+                        if (submit_btn.innerHTML !== '<nobr>审批通过</nobr>') {
+                            if (submit_btn.innerHTML.includes('<nobr>撤回</nobr>')) {
+                                let newUrl = items.pop()
+                                if (newUrl === window.location.href) {
+                                    newUrl = items.pop()
+                                }
+                                window.location.href = newUrl
+                                return
+                            }
+                            GM_log("发生错误")
+                            return
+                        }
                         submit_btn.click();
                         setTimeout(() => {
                             let ok_btn = document.querySelector('div.dialog_footer > button.dialog_button.default.fr')
@@ -239,8 +275,6 @@
                                 let newUrl = items.pop()
                                 if (newUrl === window.location.href) {
                                     newUrl = items.pop()
-                                    alert(newUrl)
-                                    alert(window.location.href)
                                 }
                                 window.location.href = newUrl
                             }, 1000)
@@ -251,16 +285,10 @@
                 }
                 if (GM_getValue('DYJJHelper_autoSubmit')) {
                     submit()
-                } else {
-                    GM_registerMenuCommand('开始自动审核', function () {
-                        GM_setValue('DYJJHelper_autoSubmit', true)
-                        setTimeout(submit, 1000)
-                        GM_unregisterMenuCommand('开始自动审核')
-                    })
                 }
 
             }
         });
     }
-    getUrls();
+    /* -------------------------------------------------------------------------- */
 })();
