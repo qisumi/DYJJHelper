@@ -6,9 +6,11 @@
   "author": "Qisumi <940858763@qq.com>",
   "license": "MIT",
   "dependencies": {
-    "esbuild": "^0.19.2"
+    "@fal-works/esbuild-plugin-global-externals": "^2.1.2",
+    "esbuild": "^0.19.2",
+    "jquery": "^3.7.0"
   },
   "scripts": {
-    "build": "node ./build.js"
+    "build": "node ./esbuild.js"
   }
 }

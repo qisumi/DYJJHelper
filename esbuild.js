@@ -1,17 +1,23 @@
 let esbuild = require('esbuild');
+let globalExternals = require('@fal-works/esbuild-plugin-global-externals');
+globalExternals = globalExternals.globalExternals
 
-esbuild.buildSync({
-    entryPoints: 'index.js',
-    outdir: 'dist',
-    outfile: 'DYJJHelper.user.js',
+esbuild.build({
+    entryPoints: ['index.user.js'],
+    outfile: 'dist/DYJJHelper.user.js',
     bundle: true,
     platform: 'browser',
     format: 'iife',
     loader: {
         '.html': 'text',
-        '.css': 'css',
+        '.css': 'text',
     },
     keepNames: true,
+    plugins: [
+        globalExternals({
+            'jquery': '$'
+        }),
+    ],
     banner: {
         js: `// ==UserScript==
 // @name         DYJJHelper

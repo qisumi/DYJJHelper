@@ -2,7 +2,7 @@
  * @Author: Qisumi 940858763@qq.com
  * @Date: 2023-08-16 20:01:17
  * @LastEditors: Qisumi 940858763@qq.com
- * @LastEditTime: 2023-08-18 10:17:42
+ * @LastEditTime: 2023-08-18 10:20:06
  * @FilePath: \DYJJHelper\README.md
  * @Description: 
  * 
@@ -28,6 +28,7 @@
 2. 修改程序结构，增加浮窗UI，使其可以方便的增加功能。(完成)
 3. 修复有时候会跳转到已经审核的页面的问题。
 4. 总请求数量如果超过30个将无法正确获取，需要更换接口。
+5. 将现有代码进行拆分
 
 ## 更新日志
 
