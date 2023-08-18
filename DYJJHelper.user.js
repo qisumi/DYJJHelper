@@ -196,7 +196,7 @@
     /* -------------------------------------------------------------------------- */
     /*                        1. 入校申请自动审批功能                               */
     /* -------------------------------------------------------------------------- */
-    let filter = function (item, idx, array) {
+    function filter(item, idx, array) {
         // 这里编写审核通过的条件逻辑判断，需要注意的是在JS中，日期的月份是从0开始的
         let arriveGateTime = new Date(item.arrive_gate_time)
         let beginTime = new Date(2023, 7, 19)
@@ -206,7 +206,7 @@
         }
         return true
     }
-    let getUrls = function (filter) {
+    function getUrls(filter) {
         GM_xmlhttpRequest({
             url: "https://ywgl.seu.edu.cn/api/stureturn/bkslook/0",
             method: "POST",
@@ -239,56 +239,51 @@
                     GM_setValue('DYJJHelper_autoSubmit', false)
                     return
                 }
-
-                /* -------------------------------------------------------------------------- */
-                /*                                   自动审核流程                              */
-                /* -------------------------------------------------------------------------- */
-                function submit() {
-                    GM_log("审核页面")
-                    if (items.length === 0) {
-                        // 如果没有未审批，跳转回到管理页面
-                        window.location.href = 'https://ywgl.seu.edu.cn/bkslook'
-                    }
-                    let submit_btn = document.querySelectorAll("a.command_button_content")[0]
-                    if (submit_btn) {
-                        if (submit_btn.innerHTML !== '<nobr>审批通过</nobr>') {
-                            if (submit_btn.innerHTML.includes('<nobr>撤回</nobr>')) {
-                                let newUrl = items.pop()
-                                if (newUrl === window.location.href) {
-                                    newUrl = items.pop()
-                                }
-                                window.location.href = newUrl
-                                return
-                            }
-                            GM_log("发生错误")
-                            return
-                        }
-                        submit_btn.click();
-                        setTimeout(() => {
-                            let ok_btn = document.querySelector('div.dialog_footer > button.dialog_button.default.fr')
-                            ok_btn.click()
-                            setTimeout(() => {
-                                if (items.length === 1) {
-                                    // 如果这已经是最后一个需要审核的，直接跳转回到管理页面
-                                    window.location.href = 'https://ywgl.seu.edu.cn/bkslook'
-                                }
-                                let newUrl = items.pop()
-                                if (newUrl === window.location.href) {
-                                    newUrl = items.pop()
-                                }
-                                window.location.href = newUrl
-                            }, 1000)
-                        }, 1000);
-                    } else {
-                        setTimeout(submit, 1000)
-                    }
-                }
                 if (GM_getValue('DYJJHelper_autoSubmit')) {
-                    submit()
+                    submit(items)
                 }
-
             }
         });
+    }
+    function submit(items) {
+        GM_log("审核页面")
+        if (items.length === 0) {
+            // 如果没有未审批，跳转回到管理页面
+            window.location.href = 'https://ywgl.seu.edu.cn/bkslook'
+        }
+        let submit_btn = document.querySelectorAll("a.command_button_content")[0]
+        if (submit_btn) {
+            if (submit_btn.innerHTML !== '<nobr>审批通过</nobr>') {
+                if (submit_btn.innerHTML.includes('<nobr>撤回</nobr>')) {
+                    let newUrl = items.pop()
+                    if (newUrl === window.location.href) {
+                        newUrl = items.pop()
+                    }
+                    window.location.href = newUrl
+                    return
+                }
+                GM_log("发生错误")
+                return
+            }
+            submit_btn.click();
+            setTimeout(() => {
+                let ok_btn = document.querySelector('div.dialog_footer > button.dialog_button.default.fr')
+                ok_btn.click()
+                setTimeout(() => {
+                    if (items.length === 1) {
+                        // 如果这已经是最后一个需要审核的，直接跳转回到管理页面
+                        window.location.href = 'https://ywgl.seu.edu.cn/bkslook'
+                    }
+                    let newUrl = items.pop()
+                    if (newUrl === window.location.href) {
+                        newUrl = items.pop()
+                    }
+                    window.location.href = newUrl
+                }, 1000)
+            }, 1000);
+        } else {
+            setTimeout(submit, 1000)
+        }
     }
     /* -------------------------------------------------------------------------- */
 })();

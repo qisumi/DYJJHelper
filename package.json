@@ -1,0 +1,14 @@
+{
+  "name": "DYJJHelper",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/qisumi/DYJJHelper.git",
+  "author": "Qisumi <940858763@qq.com>",
+  "license": "MIT",
+  "dependencies": {
+    "esbuild": "^0.19.2"
+  },
+  "scripts": {
+    "build": "node ./build.js"
+  }
+}
